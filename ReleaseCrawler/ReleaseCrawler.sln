@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2002
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReleaseCrawler", "ReleaseCrawler.csproj", "{AD443F3E-17C8-4A44-9E42-7F41755077DF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AD443F3E-17C8-4A44-9E42-7F41755077DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD443F3E-17C8-4A44-9E42-7F41755077DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD443F3E-17C8-4A44-9E42-7F41755077DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD443F3E-17C8-4A44-9E42-7F41755077DF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A9C8B407-621E-454B-BCF1-312CA05091E0}
+	EndGlobalSection
+EndGlobal
