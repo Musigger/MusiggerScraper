@@ -1,17 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using ReleaseCrawler;
+using ReleaseCrowler.CustomClasses;
+using ReleaseCrowler.Models;
+using System;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Description;
-using ReleaseCrawler;
-using ReleaseCrowler.Models;
-using System.Net.Http.Headers;
 
 namespace ReleaseCrowler.Controllers
 {
@@ -19,12 +18,29 @@ namespace ReleaseCrowler.Controllers
     {
         private DataContext db = new DataContext();
 
-        public HttpResponseMessage Get()
+        public HttpResponseMessage Get(int p = 1, int votes = 0, string label = "", string genres ="", string type="")
         {
-            return Request.CreateResponse(HttpStatusCode.OK, db.Releases.ToList(), MediaTypeHeaderValue.Parse("application/json"));
+            var releases = db.Releases.Where(m => m.Votes > votes && m.Genres.Contains(genres));
+
+            var parseResult = Enum.TryParse<ReleaseType>(type, out var relType);
+
+            if (parseResult)
+            {
+                releases = releases.Where(m => m.Type == relType);
+            }
+
+            Paginator<Release> paginator = new Paginator<Release>(releases.OrderByDescending(n=>n.ReleaseId).ToList());
+            
+            return Request.CreateResponse(HttpStatusCode.OK, paginator.GetPage(p), MediaTypeHeaderValue.Parse("application/json"));
         }
 
-        //// GET: api/Releases
+        public HttpResponseMessage Get(int id)
+        {
+            return Request.CreateResponse(HttpStatusCode.OK, db.Releases.Find(id), MediaTypeHeaderValue.Parse("application/json"));
+        }
+
+
+        //// GET: api/Releases  
         //public IQueryable<Release> GetReleases()
         //{
         //    return db.Releases;
@@ -44,70 +60,6 @@ namespace ReleaseCrowler.Controllers
         //}
 
         // PUT: api/Releases/5
-        [ResponseType(typeof(void))]
-        public async Task<IHttpActionResult> PutRelease(int id, Release release)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            if (id != release.Id)
-            {
-                return BadRequest();
-            }
-
-            db.Entry(release).State = EntityState.Modified;
-
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ReleaseExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return StatusCode(HttpStatusCode.NoContent);
-        }
-
-        // POST: api/Releases
-        [ResponseType(typeof(Release))]
-        public async Task<IHttpActionResult> PostRelease(Release release)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            db.Releases.Add(release);
-            await db.SaveChangesAsync();
-
-            return CreatedAtRoute("DefaultApi", new { id = release.Id }, release);
-        }
-
-        // DELETE: api/Releases/5
-        [ResponseType(typeof(Release))]
-        public async Task<IHttpActionResult> DeleteRelease(int id)
-        {
-            Release release = await db.Releases.FindAsync(id);
-            if (release == null)
-            {
-                return NotFound();
-            }
-
-            db.Releases.Remove(release);
-            await db.SaveChangesAsync();
-
-            return Ok(release);
-        }
 
         protected override void Dispose(bool disposing)
         {
