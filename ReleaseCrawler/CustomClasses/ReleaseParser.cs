@@ -70,8 +70,7 @@ namespace ReleaseCrawler.CustomClasses
 
                         var label = tablerel.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                          //лейбл
                         var info = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("unreset")).First().InnerHtml;//инфо (треклист, прослушка, итц)
-                        var img = releasePage.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "fancybox")).First();
-                        var Cover = img.Descendants("img").First().Attributes["src"].Value;                                                 //обложка
+                        var Cover = releasePage.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "fancybox")).First().Attributes["href"].Value;//обложка
 
                         //пост запросом получаем хитро спрятанный ссылки на скачивание
                         var res = Http.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection() {
