@@ -50,6 +50,7 @@ namespace ReleaseCrawler
         }
         public ReleaseItem(Release release)
         {
+            Id = release.Id;
             Name = release.Name;
             Votes = release.Votes;
             Type = release.Type.ToString();
