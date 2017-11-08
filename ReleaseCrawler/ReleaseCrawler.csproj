@@ -124,9 +124,12 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\ArtistsController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\GenresController.cs" />
+    <Compile Include="Controllers\LabelsController.cs" />
     <Compile Include="Controllers\ReleasesController.cs" />
+    <Compile Include="CustomClasses\HeaderFilter.cs" />
     <Compile Include="CustomClasses\Page.cs" />
     <Compile Include="CustomClasses\ReleaseParser.cs" />
     <Compile Include="Global.asax.cs">
@@ -162,7 +165,11 @@
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Views\Artists\" />
+    <Folder Include="Views\Labels\" />
+    <Folder Include="Views\Lables\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

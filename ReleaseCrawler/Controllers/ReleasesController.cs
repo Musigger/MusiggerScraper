@@ -1,16 +1,11 @@
 ﻿using ReleaseCrawler;
 using ReleaseCrowler.CustomClasses;
 using ReleaseCrowler.Models;
-using System;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Description;
 
 namespace ReleaseCrowler.Controllers
 {
@@ -18,19 +13,70 @@ namespace ReleaseCrowler.Controllers
     {
         private DataContext db = new DataContext();
 
-        public HttpResponseMessage Get(int p = 1, int votes = 0, string label = "", string genres ="", string type="")
+        public HttpResponseMessage Get(int p = 1, int votes = 0, int perPage = 24, string labels = "", string genres ="", string types="", string artists = "")
         {
-            var releases = db.Releases.Where(m => m.Votes > votes && m.Genres.Contains(genres));
+            var releases = db.Releases.Where(m => m.Votes > votes);
 
-            var parseResult = Enum.TryParse<ReleaseType>(type, out var relType);
-
-            if (parseResult)
+            try
             {
-                releases = releases.Where(m => m.Type == relType);
-            }
+                if (artists != "")
+                {
+                    string[] artistsList = artists.Split(',');
 
-            Paginator<Release> paginator = new Paginator<Release>(releases.OrderByDescending(n=>n.ReleaseId).ToList());
-            
+                    if (artistsList.Count() > 0)
+                    {
+                        releases = releases.Where(m => artistsList.Any(n => m.Artists.Contains(n)));
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                if (labels != "")
+                {
+                    string[] labelsList = labels.Split(',');
+
+                    if (labelsList.Count() > 0)
+                    {
+                        releases = releases.Where(m => labelsList.Any(n => m.Label.Contains(n)));
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                if (genres != "")
+                {
+                    string[] genreList = genres.Split(',');
+
+                    if (genreList.Count() > 0)
+                    {
+                        releases = releases.Where(m => genreList.Any(n => m.Genres.Contains(n)));
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                if (types != "")
+                {
+                    string[] typeList = types.Split(',');
+
+                    if (typeList.Count() > 0)
+                    {
+                        releases = releases.Where(m => typeList.Contains(m.Type.ToString()));
+                    }
+                }
+            }
+            catch { }
+           
+            Paginator<ReleaseItem> paginator = new Paginator<ReleaseItem>(releases.OrderByDescending(n=>n.ReleaseId).AsEnumerable().Select(s=> new ReleaseItem(s)), perPage);
+
+            Request.Properties["Count"] = releases.Count();
+
             return Request.CreateResponse(HttpStatusCode.OK, paginator.GetPage(p), MediaTypeHeaderValue.Parse("application/json"));
         }
 
