@@ -17,20 +17,8 @@ namespace ReleaseCrowler.Controllers
         {
             var releases = db.Releases.Where(m => m.Votes > votes);
 
-            try
-            {
-                if (artists != "")
-                {
-                    string[] artistsList = artists.Split(',');
-
-                    if (artistsList.Count() > 0)
-                    {
-                        releases = releases.Where(m => artistsList.Any(n => m.Artists.Contains(n)));
-                    }
-                }
-            }
-            catch { }
-
+            releases = releases.Where(m => m.Artists.Contains(artists));
+                   
             try
             {
                 if (labels != "")
@@ -82,6 +70,7 @@ namespace ReleaseCrowler.Controllers
 
         public HttpResponseMessage Get(int id)
         {
+            Request.Properties["Count"] = 1;
             return Request.CreateResponse(HttpStatusCode.OK, db.Releases.Find(id), MediaTypeHeaderValue.Parse("application/json"));
         }
 
