@@ -166,7 +166,6 @@
     <Content Include="Views\Shared\_Layout.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Views\Artists\" />
     <Folder Include="Views\Labels\" />
     <Folder Include="Views\Lables\" />
   </ItemGroup>
