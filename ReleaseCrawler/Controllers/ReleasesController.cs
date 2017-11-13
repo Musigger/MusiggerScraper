@@ -1,11 +1,18 @@
-﻿using ReleaseCrawler;
+﻿using HtmlAgilityPack;
+using Newtonsoft.Json.Linq;
+using ReleaseCrawler;
 using ReleaseCrowler.CustomClasses;
 using ReleaseCrowler.Models;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Web.Http;
+using static System.Net.WebRequestMethods;
+using ReleaseCrawler.Controllers;
+using System;
 
 namespace ReleaseCrowler.Controllers
 {
@@ -84,9 +91,59 @@ namespace ReleaseCrowler.Controllers
         {
             Request.Properties["Count"] = "1";
 
-            return Request.CreateResponse(HttpStatusCode.OK, db.Releases.Find(id), MediaTypeHeaderValue.Parse("application/json"));
+            return Request.CreateResponse(HttpStatusCode.OK, new ReleaseDetails(db.Releases.Find(id)), MediaTypeHeaderValue.Parse("application/json"));
         }
+        
+        public HttpResponseMessage Get (int id, bool update)
+        {
+            var release = db.Releases.Find(id);
+            var expDate = DateTime.Now.AddDays(-1);
+            Request.Properties["Count"] = "1";
 
+            if (release.VoteRateUpdated > expDate)
+            {
+                return Request.CreateResponse(HttpStatusCode.NotModified, release, MediaTypeHeaderValue.Parse("application/json"));
+            }
+
+            WebClient webClient = new WebClient();
+            webClient.Encoding = Encoding.UTF8;
+
+            var releaseResponse = webClient.DownloadString("http://freake.ru/" + release.ReleaseId);
+            HtmlDocument releaseDoc = new HtmlDocument();
+            releaseDoc.LoadHtml(releaseResponse);
+            var releasePage = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "post")).First();
+
+            string rateId = "rate-r-" + release.ReleaseId;
+            var rate = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", rateId)).First().InnerHtml; //рейтинг
+            string voteId = "rate-v-" + release.ReleaseId;
+            var vote = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", voteId)).First().InnerHtml; //голоса
+            var info = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("unreset")).First().InnerHtml;//инфо (треклист, прослушка, итц)
+            
+            //пост запросом получаем хитро спрятанный ссылки на скачивание
+            var res = HttpInvoker.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection() {
+                            { "id", release.ReleaseId.ToString() }
+                        });
+            var str = Encoding.Default.GetString(res);
+            JObject json = JObject.Parse(str);
+            string links = "";
+            if (json["answer"].ToString() == "ok")
+            {
+                links = json["link"].ToString().Replace("Ссылки на скачивание", "Download links");
+            }
+            ////////////////////////////////////////////////////////////////
+
+            release.VoteRateUpdated = DateTime.Now;
+            release.Rating = decimal.Parse(rate.Replace('.', ','));
+            release.Votes = int.Parse(vote);
+            release.Info = info;
+            release.Links = links;
+
+            db.Entry(release).State = System.Data.Entity.EntityState.Modified;
+            db.SaveChanges();
+
+
+            return Request.CreateResponse(HttpStatusCode.OK, new ReleaseDetails(release), MediaTypeHeaderValue.Parse("application/json"));
+        }
 
         //// GET: api/Releases  
         //public IQueryable<Release> GetReleases()

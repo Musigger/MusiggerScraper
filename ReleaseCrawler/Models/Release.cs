@@ -21,6 +21,7 @@ namespace ReleaseCrawler
         public string MiniCover { get; set; }
         public string Genres { get; set; }
         public decimal Rating { get; set; }
+        public DateTime? VoteRateUpdated { get; set; }
     }
 
     public enum ReleaseType

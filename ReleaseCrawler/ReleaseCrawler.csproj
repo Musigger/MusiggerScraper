@@ -129,6 +129,7 @@
     <Compile Include="Controllers\LabelsController.cs" />
     <Compile Include="Controllers\ReleasesController.cs" />
     <Compile Include="CustomClasses\HeaderFilter.cs" />
+    <Compile Include="CustomClasses\HttpInvoker.cs" />
     <Compile Include="CustomClasses\Page.cs" />
     <Compile Include="CustomClasses\ReleaseParser.cs" />
     <Compile Include="Global.asax.cs">

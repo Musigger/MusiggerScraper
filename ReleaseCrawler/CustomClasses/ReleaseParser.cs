@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
+using ReleaseCrowler.CustomClasses;
 using ReleaseCrowler.Models;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using System.Text;
+using static System.Net.WebRequestMethods;
 
 namespace ReleaseCrawler.CustomClasses
 {
@@ -41,7 +43,7 @@ namespace ReleaseCrawler.CustomClasses
                         var a = msimage.Descendants("a").First();
                         
                         var rateclass = msinfo.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("ms-rate")).First();
-                        var infoClass = rateclass.Descendants("div").Where(m => m.Attributes["class"].Value == "info").First();             //Количество голосов
+                        //var infoClass = rateclass.Descendants("div").Where(m => m.Attributes["class"].Value == "info").First();             //Количество голосов
 
                         var table = msinfo.Descendants("table").First();
                         var date = table.Descendants("tr").First().Descendants("a").First().InnerText;                                      //Дата релиза
@@ -54,8 +56,11 @@ namespace ReleaseCrawler.CustomClasses
                         HtmlDocument releaseDoc = new HtmlDocument();
                         releaseDoc.LoadHtml(releaseResponse);
                         var releasePage = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "post")).First();
+
                         string rateId = "rate-r-" + releaseId;
                         var rate = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", rateId)).First().InnerHtml; //рейтинг
+                        string voteId = "rate-v-" + releaseId;
+                        var vote = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", voteId)).First().InnerHtml; //голоса
 
                         string artists = ""; //сюда будем складывать артистов
                         
@@ -73,7 +78,7 @@ namespace ReleaseCrawler.CustomClasses
                         var Cover = releasePage.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "fancybox")).First().Attributes["href"].Value;//обложка
 
                         //пост запросом получаем хитро спрятанный ссылки на скачивание
-                        var res = Http.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection() {
+                        var res = HttpInvoker.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection() {
                             { "id", releaseId }
                         });
                         var str = Encoding.Default.GetString(res);
@@ -81,7 +86,7 @@ namespace ReleaseCrawler.CustomClasses
                         string links = "";
                         if (json["answer"].ToString() == "ok")
                         {
-                            links = json["link"].ToString();
+                            links = json["link"].ToString().Replace("Ссылки на скачивание", "Download links");
                         }
                         ////////////////////////////////////////////////////////////////
 
@@ -89,7 +94,7 @@ namespace ReleaseCrawler.CustomClasses
                         Release release = new Release
                         {
                             Name = elps.Descendants("a").First().InnerText,
-                            Votes = int.Parse(infoClass.InnerText.Remove(0, 9)),
+                            Votes = int.Parse(vote),
                             Date = DateTime.ParseExact(date, "dd.MM.yyyy", null),
                             Type = (ReleaseType)Enum.Parse(typeof(ReleaseType), type),
                             Artists = artists,
@@ -150,17 +155,6 @@ namespace ReleaseCrawler.CustomClasses
             return;
         }
 
-        public static class Http
-        {
-            public static byte[] Post(string uri, NameValueCollection pairs)
-            {
-                byte[] response = null;
-                using (WebClient client = new WebClient())
-                {
-                    response = client.UploadValues(uri, pairs);
-                }
-                return response;
-            }
-        }
+
     }
 }
