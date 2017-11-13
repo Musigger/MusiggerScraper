@@ -15,11 +15,11 @@ namespace ReleaseCrowler.Controllers
 
         public HttpResponseMessage Get(int p = 1, int votes = 0, int perPage = 24, string labels = "", string genres ="", string types="", string artists = "")
         {
-            var releases = db.Releases.Where(m => m.Votes > votes);
+            var releases = db.Releases.Where(m => m.Votes >= votes);
 
             try
             {
-                if (artists != "")
+                if (artists != null && artists != "")
                 {
                     string[] artistsList = artists.Split(',');
 
@@ -33,7 +33,7 @@ namespace ReleaseCrowler.Controllers
 
             try
             {
-                if (labels != "")
+                if (labels != null && labels != "")
                 {
                     string[] labelsList = labels.Split(',');
 
@@ -47,7 +47,7 @@ namespace ReleaseCrowler.Controllers
 
             try
             {
-                if (genres != "")
+                if (genres != null && genres != "")
                 {
                     string[] genreList = genres.Split(',');
 
@@ -61,7 +61,7 @@ namespace ReleaseCrowler.Controllers
 
             try
             {
-                if (types != "")
+                if (types != null && types != "")
                 {
                     string[] typeList = types.Split(',');
 
@@ -82,6 +82,8 @@ namespace ReleaseCrowler.Controllers
 
         public HttpResponseMessage Get(int id)
         {
+            Request.Properties["Count"] = "1";
+
             return Request.CreateResponse(HttpStatusCode.OK, db.Releases.Find(id), MediaTypeHeaderValue.Parse("application/json"));
         }
 
