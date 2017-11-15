@@ -1,8 +1,8 @@
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using ReleaseCrawler;
 using ReleaseCrawler.CustomClasses;
 using ReleaseCrawler.Models;
+using System;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
@@ -10,9 +10,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Web.Http;
-using static System.Net.WebRequestMethods;
-using ReleaseCrawler.Controllers;
-using System;
 
 namespace ReleaseCrawler.Controllers
 {
@@ -22,8 +19,13 @@ namespace ReleaseCrawler.Controllers
 
         public HttpResponseMessage Get(int p = 1, int votes = 0, int perPage = 24, string labels = "", string genres ="", string types="", string artists = "")
         {
-            var releases = db.Releases.Where(m => m.Votes >= votes);
+            var releases = db.Releases.AsQueryable();
 
+            if (votes > 0)
+            {
+                releases = releases.Where(m => m.Votes >= votes);
+            }
+            
             try
             {
                 if (artists != null && artists != "")
@@ -79,12 +81,20 @@ namespace ReleaseCrawler.Controllers
                 }
             }
             catch { }
-           
-            Paginator<ReleaseItem> paginator = new Paginator<ReleaseItem>(releases.OrderByDescending(n=>n.ReleaseId).AsEnumerable().Select(s=> new ReleaseItem(s)), perPage);
-
+            
             Request.Properties["Count"] = releases.Count();
 
-            return Request.CreateResponse(HttpStatusCode.OK, paginator.GetPage(p), MediaTypeHeaderValue.Parse("application/json"));
+            if (perPage == 0 || perPage >= 100)
+            {
+                perPage = 24;
+            }
+
+            int startIndex = perPage * (p - 1);
+            var page = releases.OrderByDescending(m=>m.ReleaseId).Skip(startIndex).Take(perPage).AsEnumerable();
+
+            var result = page.Select(s => new ReleaseItem(s)).ToList();
+
+            return Request.CreateResponse(HttpStatusCode.OK, result, MediaTypeHeaderValue.Parse("application/json"));
         }
 
         public HttpResponseMessage Get(int id)

@@ -8,7 +8,6 @@ namespace CrawlerTask
         {
             ReleaseParser.Run();
             ReleaseParser.GetGenres();
-
         }
     }
 }

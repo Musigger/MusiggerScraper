@@ -1,6 +1,5 @@
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using ReleaseCrawler.CustomClasses;
 using ReleaseCrawler.Models;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using System.Text;
-using static System.Net.WebRequestMethods;
 
 namespace ReleaseCrawler.CustomClasses
 {
@@ -20,51 +18,52 @@ namespace ReleaseCrawler.CustomClasses
             {
                 DataContext db = new DataContext();
                 webClient.Encoding = Encoding.UTF8;
-                //начинаем с 30 страницы, чтоб получать настоявшиеся релизы
                 int pageNumber = 30;
                 while (pageNumber < 400)
                 {
                     var response = webClient.DownloadString("http://freake.ru/?p=" + pageNumber);
                     HtmlDocument doc = new HtmlDocument();
                     doc.LoadHtml(response);
-                    //Получаем страницу
+                    //Getting the page
                     var page = doc.DocumentNode.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "music-small"));
 
-                    //Получаем из базы список существующих айдишников релизов, для контроля уникальности
-                    List<int> existing = db.Releases.Select(m => m.ReleaseId).ToList();
+                    //Retrieveing existing releases to exclude duplicates
+                    var existing = db.Releases;
+
+                    int doubles = 0;
                     
-                    //Идем по странице
+                    //iterating through page
                     foreach (var item in page)
                     {
                         var msimage = item.Descendants("div").Where(m => m.Attributes["class"].Value == "ms-image").First();
                         var msinfo = item.Descendants("div").Where(m => m.Attributes["class"].Value == "ms-info").First();
                         
-                        var elps = msinfo.Descendants("h3").First();                                                                        //Название релиза
+                        var elps = msinfo.Descendants("h3").First();                                                                        //Release name
                         var a = msimage.Descendants("a").First();
                         
                         var rateclass = msinfo.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("ms-rate")).First();
-                        //var infoClass = rateclass.Descendants("div").Where(m => m.Attributes["class"].Value == "info").First();             //Количество голосов
+                        //var infoClass = rateclass.Descendants("div").Where(m => m.Attributes["class"].Value == "info").First();             //Vote count
 
                         var table = msinfo.Descendants("table").First();
-                        var date = table.Descendants("tr").First().Descendants("a").First().InnerText;                                      //Дата релиза
-                        var type = table.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                              //Тип релиза
+                        var date = table.Descendants("tr").First().Descendants("a").First().InnerText;                                      //Release date
+                        var type = table.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                              //Release type
                         
-                        //Берем айди релиза, на который будем заходить
+                        //Parsing release ID
                         string releaseId = a.Attributes["href"].Value.Remove(0, 1);
-                        //Получаем страницу релиза
+                        //Retrieving the release page
                         var releaseResponse = webClient.DownloadString("http://freake.ru/" + releaseId);
                         HtmlDocument releaseDoc = new HtmlDocument();
                         releaseDoc.LoadHtml(releaseResponse);
                         var releasePage = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "post")).First();
 
                         string rateId = "rate-r-" + releaseId;
-                        var rate = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", rateId)).First().InnerHtml; //рейтинг
+                        var rate = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", rateId)).First().InnerHtml; //rating
                         string voteId = "rate-v-" + releaseId;
-                        var vote = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", voteId)).First().InnerHtml; //голоса
+                        var vote = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", voteId)).First().InnerHtml; //votes
 
-                        string artists = ""; //сюда будем складывать артистов
+                        string artists = ""; //string for collecting artists
                         
-                        var tablerel = releasePage.Descendants("table").First();    //они лежат в таблице
+                        var tablerel = releasePage.Descendants("table").First();    
 
                         foreach (var artist in tablerel.Descendants("tr").First().Descendants("a"))
                         {
@@ -74,10 +73,15 @@ namespace ReleaseCrawler.CustomClasses
                         artists = artists.Substring(0, artists.Length - 2);                                                                 //артисты
 
                         var label = tablerel.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                          //лейбл
+
+                        if ((ReleaseType)Enum.Parse(typeof(ReleaseType), type) == ReleaseType.Radioshow)
+                        {
+                            label = "";
+                        }
                         var info = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("unreset")).First().InnerHtml;//инфо (треклист, прослушка, итц)
                         var Cover = releasePage.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "fancybox")).First().Attributes["href"].Value;//обложка
 
-                        //пост запросом получаем хитро спрятанный ссылки на скачивание
+                        //Getting hidden links with POST
                         var res = HttpInvoker.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection() {
                             { "id", releaseId }
                         });
@@ -90,7 +94,7 @@ namespace ReleaseCrawler.CustomClasses
                         }
                         ////////////////////////////////////////////////////////////////
 
-                        //Формируем модель релиза для сохранения
+                        //Creating a release to insert
                         Release release = new Release
                         {
                             Name = elps.Descendants("a").First().InnerText,
@@ -105,21 +109,32 @@ namespace ReleaseCrawler.CustomClasses
                             ReleaseId = int.Parse(releaseId),
                             MiniCover = a.Descendants("img").First().Attributes["src"].Value,
                             Genres = msinfo.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("ms-style")).First().InnerText,
-                            Rating = decimal.Parse(rate.Replace('.',','))
+                            Rating = decimal.Parse(rate),
+                            VoteRateUpdated = DateTime.Now
                         };
 
                         Console.WriteLine(release.Name + " " + release.ReleaseId + " : " + pageNumber + Environment.NewLine);
 
-                        //если такого нет, то добавляем
-                        if (!existing.Contains(release.ReleaseId))
+                        bool releaseExists = existing.Select(m => m.ReleaseId).ToList().Contains(release.ReleaseId);
+
+                        //if there's no releases with this ID adding as new
+                        if (existing == null || existing.Count() == 0 || !releaseExists)
                         {
-                            db.Releases.Add(release);
+                            db.Releases.Add(release); 
                         }
-                        else
+                        else if(releaseExists)
                         {
-                            //если такой уже есть, все сохраняем и выходим. Значит достигли ранее загруженных
-                            db.SaveChanges();
-                            return;
+                            doubles++;
+                            //if there were less than 10 duplicates. (one or two may be added to the source during running)
+                            if (doubles <= 10)
+                            {
+                                continue;
+                            }
+                            else //if threr are more duplicates just saving changes and return
+                            {
+                                db.SaveChanges();
+                                return;
+                            }
                         }
                     }
                     pageNumber++;

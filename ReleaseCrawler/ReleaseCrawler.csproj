@@ -130,7 +130,6 @@
     <Compile Include="Controllers\ReleasesController.cs" />
     <Compile Include="CustomClasses\HeaderFilter.cs" />
     <Compile Include="CustomClasses\HttpInvoker.cs" />
-    <Compile Include="CustomClasses\Page.cs" />
     <Compile Include="CustomClasses\ReleaseParser.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -141,13 +140,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Data\CrawlerDb.ldf">
-      <DependentUpon>CrawlerDb.mdf</DependentUpon>
-    </Content>
-    <Content Include="App_Data\CrawlerDb.mdf" />
-    <Content Include="App_Data\CrawlerDb_log.ldf">
-      <DependentUpon>CrawlerDb.mdf</DependentUpon>
-    </Content>
     <Content Include="Global.asax" />
     <Content Include="Properties\webjobs-list.json" />
     <Content Include="Web.config">
@@ -160,9 +152,12 @@
       <DependentUpon>Web.config</DependentUpon>
     </Content>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Properties\PublishProfiles\releasecrawler - Web Deploy.pubxml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
