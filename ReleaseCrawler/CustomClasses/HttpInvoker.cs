@@ -1,7 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Net;
 
-namespace ReleaseCrowler.CustomClasses
+namespace ReleaseCrawler.CustomClasses
 {
     public static class HttpInvoker
     {

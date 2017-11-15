@@ -5,7 +5,7 @@ using System.Data.Entity;
 using System.Linq;
 using System.Web;
 
-namespace ReleaseCrowler.Models
+namespace ReleaseCrawler.Models
 {
     public class DataContext : DbContext
     {

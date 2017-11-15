@@ -1,7 +1,7 @@
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using ReleaseCrowler.CustomClasses;
-using ReleaseCrowler.Models;
+using ReleaseCrawler.CustomClasses;
+using ReleaseCrawler.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -21,8 +21,8 @@ namespace ReleaseCrawler.CustomClasses
                 DataContext db = new DataContext();
                 webClient.Encoding = Encoding.UTF8;
                 //начинаем с 30 страницы, чтоб получать настоявшиеся релизы
-                int pageNumber = 50;
-                while (pageNumber < 60)
+                int pageNumber = 30;
+                while (pageNumber < 400)
                 {
                     var response = webClient.DownloadString("http://freake.ru/?p=" + pageNumber);
                     HtmlDocument doc = new HtmlDocument();
@@ -108,7 +108,7 @@ namespace ReleaseCrawler.CustomClasses
                             Rating = decimal.Parse(rate.Replace('.',','))
                         };
 
-                        Console.WriteLine(release.Name + ": " + pageNumber + Environment.NewLine);
+                        Console.WriteLine(release.Name + " " + release.ReleaseId + " : " + pageNumber + Environment.NewLine);
 
                         //если такого нет, то добавляем
                         if (!existing.Contains(release.ReleaseId))

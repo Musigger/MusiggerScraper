@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ReleaseCrowler.Models
+namespace ReleaseCrawler.Models
 {
     public class Genre
     {

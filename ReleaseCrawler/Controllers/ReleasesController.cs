@@ -1,8 +1,8 @@
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using ReleaseCrawler;
-using ReleaseCrowler.CustomClasses;
-using ReleaseCrowler.Models;
+using ReleaseCrawler.CustomClasses;
+using ReleaseCrawler.Models;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
@@ -14,7 +14,7 @@ using static System.Net.WebRequestMethods;
 using ReleaseCrawler.Controllers;
 using System;
 
-namespace ReleaseCrowler.Controllers
+namespace ReleaseCrawler.Controllers
 {
     public class ReleasesController : ApiController
     {
