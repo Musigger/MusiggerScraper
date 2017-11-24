@@ -4,6 +4,7 @@ using ReleaseCrawler.CustomClasses;
 using ReleaseCrawler.Models;
 using System;
 using System.Collections.Specialized;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -143,7 +144,7 @@ namespace ReleaseCrawler.Controllers
             ////////////////////////////////////////////////////////////////
 
             release.VoteRateUpdated = DateTime.Now;
-            release.Rating = decimal.Parse(rate.Replace('.', ','));
+            release.Rating = decimal.Parse(rate, NumberStyles.Any, new CultureInfo("en-US"));
             release.Votes = int.Parse(vote);
             release.Info = info;
             release.Links = links;

@@ -94,7 +94,7 @@ namespace ReleaseCrawler
             Info = release.Info;
             ReleaseId = release.ReleaseId;
             Links = release.Links;
-            Date = release.Date.ToShortTimeString();
+            Date = release.Date.ToShortDateString();
             Artists = release.Artists;
         }
     }

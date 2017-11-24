@@ -4,6 +4,7 @@ using ReleaseCrawler.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -19,7 +20,8 @@ namespace ReleaseCrawler.CustomClasses
                 DataContext db = new DataContext();
                 webClient.Encoding = Encoding.UTF8;
                 int pageNumber = 30;
-                while (pageNumber < 400)
+                int doubles = 0;
+                while (pageNumber < 200)
                 {
                     var response = webClient.DownloadString("http://freake.ru/?p=" + pageNumber);
                     HtmlDocument doc = new HtmlDocument();
@@ -28,117 +30,145 @@ namespace ReleaseCrawler.CustomClasses
                     var page = doc.DocumentNode.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "music-small"));
 
                     //Retrieveing existing releases to exclude duplicates
-                    var existing = db.Releases;
-
-                    int doubles = 0;
+                    var allExistingIds = db.Releases.Select(m=>m.ReleaseId).ToList();
                     
                     //iterating through page
                     foreach (var item in page)
                     {
-                        var msimage = item.Descendants("div").Where(m => m.Attributes["class"].Value == "ms-image").First();
-                        var msinfo = item.Descendants("div").Where(m => m.Attributes["class"].Value == "ms-info").First();
-                        
-                        var elps = msinfo.Descendants("h3").First();                                                                        //Release name
-                        var a = msimage.Descendants("a").First();
-                        
-                        var rateclass = msinfo.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("ms-rate")).First();
-                        //var infoClass = rateclass.Descendants("div").Where(m => m.Attributes["class"].Value == "info").First();             //Vote count
-
-                        var table = msinfo.Descendants("table").First();
-                        var date = table.Descendants("tr").First().Descendants("a").First().InnerText;                                      //Release date
-                        var type = table.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                              //Release type
-                        
-                        //Parsing release ID
-                        string releaseId = a.Attributes["href"].Value.Remove(0, 1);
-                        //Retrieving the release page
-                        var releaseResponse = webClient.DownloadString("http://freake.ru/" + releaseId);
-                        HtmlDocument releaseDoc = new HtmlDocument();
-                        releaseDoc.LoadHtml(releaseResponse);
-                        var releasePage = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "post")).First();
-
-                        string rateId = "rate-r-" + releaseId;
-                        var rate = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", rateId)).First().InnerHtml; //rating
-                        string voteId = "rate-v-" + releaseId;
-                        var vote = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", voteId)).First().InnerHtml; //votes
-
-                        string artists = ""; //string for collecting artists
-                        
-                        var tablerel = releasePage.Descendants("table").First();    
-
-                        foreach (var artist in tablerel.Descendants("tr").First().Descendants("a"))
+                        try
                         {
-                            artists += artist.InnerHtml;
-                            artists += ", ";
-                        }
-                        artists = artists.Substring(0, artists.Length - 2);                                                                 //артисты
-
-                        var label = tablerel.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                          //лейбл
-
-                        if ((ReleaseType)Enum.Parse(typeof(ReleaseType), type) == ReleaseType.Radioshow)
-                        {
-                            label = "";
-                        }
-                        var info = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("unreset")).First().InnerHtml;//инфо (треклист, прослушка, итц)
-                        var Cover = releasePage.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "fancybox")).First().Attributes["href"].Value;//обложка
-
-                        //Getting hidden links with POST
-                        var res = HttpInvoker.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection() {
-                            { "id", releaseId }
-                        });
-                        var str = Encoding.Default.GetString(res);
-                        JObject json = JObject.Parse(str);
-                        string links = "";
-                        if (json["answer"].ToString() == "ok")
-                        {
-                            links = json["link"].ToString().Replace("Ссылки на скачивание", "Download links");
-                        }
-                        ////////////////////////////////////////////////////////////////
-
-                        //Creating a release to insert
-                        Release release = new Release
-                        {
-                            Name = elps.Descendants("a").First().InnerText,
-                            Votes = int.Parse(vote),
-                            Date = DateTime.ParseExact(date, "dd.MM.yyyy", null),
-                            Type = (ReleaseType)Enum.Parse(typeof(ReleaseType), type),
-                            Artists = artists,
-                            Label = label,
-                            Info = info,
-                            Links = links,
-                            Cover = Cover,
-                            ReleaseId = int.Parse(releaseId),
-                            MiniCover = a.Descendants("img").First().Attributes["src"].Value,
-                            Genres = msinfo.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("ms-style")).First().InnerText,
-                            Rating = decimal.Parse(rate),
-                            VoteRateUpdated = DateTime.Now
-                        };
-
-                        Console.WriteLine(release.Name + " " + release.ReleaseId + " : " + pageNumber + Environment.NewLine);
-
-                        bool releaseExists = existing.Select(m => m.ReleaseId).ToList().Contains(release.ReleaseId);
-
-                        //if there's no releases with this ID adding as new
-                        if (existing == null || existing.Count() == 0 || !releaseExists)
-                        {
-                            db.Releases.Add(release); 
-                        }
-                        else if(releaseExists)
-                        {
-                            doubles++;
-                            //if there were less than 10 duplicates. (one or two may be added to the source during running)
-                            if (doubles <= 10)
+                            if (doubles > 0)
                             {
-                                continue;
+                                Console.WriteLine("Doubles: " + doubles);
                             }
-                            else //if threr are more duplicates just saving changes and return
+                            if (doubles >= 100)
                             {
+                                Console.WriteLine("Saving");
                                 db.SaveChanges();
                                 return;
                             }
+
+                            var msimage = item.Descendants("div").Where(m => m.Attributes["class"].Value == "ms-image").First();
+                            var a = msimage.Descendants("a").First();
+
+                            //Parsing release ID
+                            string releaseId = a.Attributes["href"].Value.Remove(0, 1);
+
+                            if (allExistingIds != null && allExistingIds.Contains(int.Parse(releaseId)))
+                            {
+                                doubles++;
+                                continue;
+                            }
+
+                            doubles = 0;
+                            
+                            var msinfo = item.Descendants("div").Where(m => m.Attributes["class"].Value == "ms-info").First();
+                            var elps = msinfo.Descendants("h3").First();                                                                        //Release name
+                            
+                            var rateclass = msinfo.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("ms-rate")).First();
+                            //var infoClass = rateclass.Descendants("div").Where(m => m.Attributes["class"].Value == "info").First();             //Vote count
+
+                            var table = msinfo.Descendants("table").First();
+                            var date = table.Descendants("tr").First().Descendants("a").First().InnerText;                                      //Release date
+                            var type = table.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                              //Release type
+                            
+                            //Retrieving the release page
+                            var releaseResponse = webClient.DownloadString("http://freake.ru/" + releaseId);
+                            HtmlDocument releaseDoc = new HtmlDocument();
+                            releaseDoc.LoadHtml(releaseResponse);
+                            var releasePage = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "post")).First();
+
+                            string rateId = "rate-r-" + releaseId;
+                            var rate = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", rateId)).First().InnerHtml; //rating
+                            string voteId = "rate-v-" + releaseId;
+                            var vote = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", voteId)).First().InnerHtml; //votes
+
+                            string artists = ""; //string for collecting artists
+
+                            var tablerel = releasePage.Descendants("table").First();
+
+                            foreach (var artist in tablerel.Descendants("tr").First().Descendants("a"))
+                            {
+                                artists += artist.InnerHtml;
+                                artists += ", ";
+                            }
+                            artists = artists.Substring(0, artists.Length - 2);                                                                 //артисты
+
+                            var label = tablerel.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                          //лейбл
+
+                            if ((ReleaseType)Enum.Parse(typeof(ReleaseType), type) == ReleaseType.Radioshow)
+                            {
+                                label = "";
+                            }
+                            var info = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("unreset")).First().InnerHtml;//инфо (треклист, прослушка, итц)
+
+                            string Cover = "";
+                            try
+                            {
+                                Cover = releasePage.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "fancybox")).First().Attributes["href"].Value;//обложка
+                            }
+                            catch{ }
+
+                            //Getting hidden links with POST
+                            var res = HttpInvoker.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection() {
+                            { "id", releaseId }
+                        });
+                            var str = Encoding.Default.GetString(res);
+                            JObject json = JObject.Parse(str);
+                            string links = "";
+                            if (json["answer"].ToString() == "ok")
+                            {
+                                links = json["link"].ToString().Replace("Ссылки на скачивание", "Download links");
+                            }
+                            ////////////////////////////////////////////////////////////////
+
+                            string ReleaseName = elps.Descendants("a").First().InnerText;
+                            int Votes = int.Parse(vote);
+                            DateTime ReleaseDate = DateTime.ParseExact(date, "dd.MM.yyyy", null);
+                            ReleaseType relType = (ReleaseType)Enum.Parse(typeof(ReleaseType), type);
+                            int ReleaseId = int.Parse(releaseId);
+                            string MiniCover = a.Descendants("img").First().Attributes["src"].Value;
+                            string Genres = msinfo.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("ms-style")).First().InnerText;
+                            decimal Rating = decimal.Parse(rate, NumberStyles.Any, new CultureInfo("en-US"));
+
+                            //Creating a release to insert
+                            Release release = new Release
+                            {
+                                Name = ReleaseName,
+                                Votes = Votes,
+                                Date = ReleaseDate,
+                                Type = relType,
+                                Artists = artists,
+                                Label = label,
+                                Info = info,
+                                Links = links,
+                                Cover = Cover,
+                                ReleaseId = ReleaseId,
+                                MiniCover = MiniCover,
+                                Genres = Genres,
+                                Rating = Rating,
+                                VoteRateUpdated = DateTime.Now
+                            };
+
+                            Console.WriteLine("Adding " + release.Name + " " + release.ReleaseId + " : " + pageNumber);
+                            db.Releases.Add(release);
+                            
+                        }
+                        catch (Exception e)
+                        {
+                            string inner = "";
+                            if (e.InnerException != null)
+                            {
+                                inner = e.InnerException.Message;
+                            }
+                            Console.WriteLine("Crawler error: " + e.Message + " Inner exception: " + inner);
+
+                            throw;
                         }
                     }
                     pageNumber++;
                 }
+                Console.WriteLine("Saving");
                 db.SaveChanges();
             }
         }
