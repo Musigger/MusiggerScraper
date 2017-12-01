@@ -18,7 +18,7 @@ namespace ReleaseCrawler.Controllers
     {
         private DataContext db = new DataContext();
 
-        public HttpResponseMessage Get(int p = 1, int votes = 0, int perPage = 24, string labels = "", string genres ="", string types="", string artists = "")
+        public HttpResponseMessage Get(int p = 1, int votes = 0, int perPage = 24, string labels = "", string genres ="", string types="", string artists = "", string title = "")
         {
             var releases = db.Releases.AsQueryable();
 
@@ -82,7 +82,17 @@ namespace ReleaseCrawler.Controllers
                 }
             }
             catch { }
-            
+
+            try
+            {
+                if (title != null && title != "")
+                {
+                    title = title.Trim();
+                    releases = releases.Where(m => m.Name.Contains(title));
+                }
+            }
+            catch { }
+
             Request.Properties["Count"] = releases.Count();
 
             if (perPage == 0 || perPage >= 100)
