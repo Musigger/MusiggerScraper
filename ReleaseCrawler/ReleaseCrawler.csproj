@@ -128,7 +128,7 @@
     <Compile Include="Controllers\GenresController.cs" />
     <Compile Include="Controllers\LabelsController.cs" />
     <Compile Include="Controllers\ReleasesController.cs" />
-    <Compile Include="CustomClasses\HeaderFilter.cs" />
+    <Compile Include="Controllers\TopTraxController.cs" />
     <Compile Include="CustomClasses\HttpInvoker.cs" />
     <Compile Include="CustomClasses\ReleaseParser.cs" />
     <Compile Include="Global.asax.cs">
@@ -137,7 +137,9 @@
     <Compile Include="Models\DataContext.cs" />
     <Compile Include="Models\Genre.cs" />
     <Compile Include="Models\Release.cs" />
+    <Compile Include="Models\TopItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RocketScience\Ranger.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Global.asax" />

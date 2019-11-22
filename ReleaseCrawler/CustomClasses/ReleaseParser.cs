@@ -30,8 +30,8 @@ namespace ReleaseCrawler.CustomClasses
                     var page = doc.DocumentNode.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "music-small"));
 
                     //Retrieveing existing releases to exclude duplicates
-                    var allExistingIds = db.Releases.Select(m=>m.ReleaseId).ToList();
-                    
+                    var allExistingIds = db.Releases.Select(m => m.ReleaseId).ToList();
+
                     //iterating through page
                     foreach (var item in page)
                     {
@@ -61,17 +61,17 @@ namespace ReleaseCrawler.CustomClasses
                             }
 
                             doubles = 0;
-                            
+
                             var msinfo = item.Descendants("div").Where(m => m.Attributes["class"].Value == "ms-info").First();
                             var elps = msinfo.Descendants("h3").First();                                                                        //Release name
-                            
+
                             var rateclass = msinfo.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("ms-rate")).First();
                             //var infoClass = rateclass.Descendants("div").Where(m => m.Attributes["class"].Value == "info").First();             //Vote count
 
                             var table = msinfo.Descendants("table").First();
                             var date = table.Descendants("tr").First().Descendants("a").First().InnerText;                                      //Release date
                             var type = table.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                              //Release type
-                            
+
                             //Retrieving the release page
                             var releaseResponse = webClient.DownloadString("http://freake.ru/" + releaseId);
                             HtmlDocument releaseDoc = new HtmlDocument();
@@ -101,18 +101,23 @@ namespace ReleaseCrawler.CustomClasses
                                 label = "";
                             }
                             var info = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("unreset")).First().InnerHtml;//инфо (треклист, прослушка, итц)
+                            
+                            var downloads = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("link-numm")).First().InnerHtml.Replace("Скачиваний: ",""); //загрузки, точнее их количесто
 
                             string Cover = "";
                             try
                             {
                                 Cover = releasePage.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "fancybox")).First().Attributes["href"].Value;//обложка
                             }
-                            catch{ }
+                            catch { }
 
                             //Getting hidden links with POST
-                            var res = HttpInvoker.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection() {
-                            { "id", releaseId }
-                        });
+                            var res = HttpInvoker.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection()
+                            {
+                                {
+                                    "id", releaseId
+                                }
+                            });
                             var str = Encoding.Default.GetString(res);
                             JObject json = JObject.Parse(str);
                             string links = "";
@@ -147,12 +152,13 @@ namespace ReleaseCrawler.CustomClasses
                                 MiniCover = MiniCover,
                                 Genres = Genres,
                                 Rating = Rating,
-                                VoteRateUpdated = DateTime.Now
+                                VoteRateUpdated = DateTime.Now,
+                                Downloads = int.Parse(downloads)
                             };
 
                             Console.WriteLine("Adding " + release.Name + " " + release.ReleaseId + " : " + pageNumber);
                             db.Releases.Add(release);
-                            
+
                         }
                         catch (Exception e)
                         {

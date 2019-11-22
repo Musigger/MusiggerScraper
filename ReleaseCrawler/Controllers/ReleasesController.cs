@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Web;
 using System.Web.Http;
 
 namespace ReleaseCrawler.Controllers
@@ -95,6 +96,10 @@ namespace ReleaseCrawler.Controllers
 
             Request.Properties["Count"] = releases.Count();
 
+            var count = Request.Properties["Count"];
+            HttpContext.Current.Response.AppendHeader("X-Total", count.ToString());
+
+
             if (perPage == 0 || perPage >= 100)
             {
                 perPage = 24;
@@ -121,6 +126,9 @@ namespace ReleaseCrawler.Controllers
             var expDate = DateTime.Now.AddDays(-1);
             Request.Properties["Count"] = "1";
 
+            var count = Request.Properties["Count"];
+            HttpContext.Current.Response.AppendHeader("X-Total", count.ToString());
+
             if (release.VoteRateUpdated > expDate)
             {
                 return Request.CreateResponse(HttpStatusCode.NotModified, release, MediaTypeHeaderValue.Parse("application/json"));
@@ -139,7 +147,9 @@ namespace ReleaseCrawler.Controllers
             string voteId = "rate-v-" + release.ReleaseId;
             var vote = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", voteId)).First().InnerHtml; //голоса
             var info = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("unreset")).First().InnerHtml;//инфо (треклист, прослушка, итц)
-            
+
+            var downloads = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("link-numm")).First().InnerHtml.Replace("Скачиваний: ", ""); //загрузки, точнее их количесто
+
             //пост запросом получаем хитро спрятанный ссылки на скачивание
             var res = HttpInvoker.Post("http://freake.ru/engine/modules/ajax/music.link.php", new NameValueCollection() {
                             { "id", release.ReleaseId.ToString() }
@@ -158,6 +168,7 @@ namespace ReleaseCrawler.Controllers
             release.Votes = int.Parse(vote);
             release.Info = info;
             release.Links = links;
+            release.Downloads = int.Parse(downloads);
 
             db.Entry(release).State = System.Data.Entity.EntityState.Modified;
             db.SaveChanges();

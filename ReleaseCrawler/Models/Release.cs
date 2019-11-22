@@ -22,6 +22,7 @@ namespace ReleaseCrawler
         public string Genres { get; set; }
         public decimal Rating { get; set; }
         public DateTime? VoteRateUpdated { get; set; }
+        public int? Downloads { get; set; }
     }
 
     public enum ReleaseType
