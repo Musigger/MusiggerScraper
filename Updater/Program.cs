@@ -2,7 +2,7 @@
 using System.Net;
 using System.Text;
 
-namespace ReleaseUpdater
+namespace Updater
 {
     class Program
     {
@@ -12,7 +12,7 @@ namespace ReleaseUpdater
             WebClient webClient = new WebClient();
             webClient.Encoding = Encoding.UTF8;
 
-            for (int i = 105324; i > 95000; i--)
+            for (int i = 102825; i > 95000; i--)
             {
                 Console.WriteLine(i);
                 try
@@ -26,7 +26,6 @@ namespace ReleaseUpdater
                 }
 
             }
-
 
             Console.WriteLine("Complete");
         }

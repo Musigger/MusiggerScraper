@@ -19,6 +19,11 @@ namespace ReleaseCrowler.Controllers
             var startDate = DateTime.UtcNow.AddDays(-weeks * 7);
             var releasesToRate = db.Releases.Where(m => m.Date > startDate).ToList();
 
+            var maxVotes = releasesToRate.Max(m => m.Votes);
+
+            foreach (var release in releasesToRate)
+                release.Votes = 100 * release.Votes / maxVotes;
+            
             var top = releasesToRate
                 .Select(s => new TopItem(s))
                 .OrderByDescending(m => m.Goodness)

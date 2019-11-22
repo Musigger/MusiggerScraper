@@ -8,7 +8,7 @@ namespace ReleaseCrowler.RocketScience
         public static decimal GetReleaseGoodness(Release release)
         {
             var voteGoodness = (decimal)GoodnessByVotes(release);
-            var ratingGoodness = (decimal)GoodnessByRating(release);
+            var ratingGoodness = (decimal)GoodnessByRating(release)/* * 0.8M*/;
 
             return (voteGoodness + ratingGoodness) / 2;
         }
@@ -28,11 +28,13 @@ namespace ReleaseCrowler.RocketScience
         {
             double x = (double)release.Rating;
 
-            var y = -637.6923 + 838.6223 * x
-                - 436.6759 * x * x
-                + 112.471 * Math.Pow(x, 3)
-                - 14.32438 * Math.Pow(x, 4)
-                + 0.7220866 * Math.Pow(x, 5);
+            //var y = -637.6923 + 838.6223 * x
+            //    - 436.6759 * x * x
+            //    + 112.471 * Math.Pow(x, 3)
+            //    - 14.32438 * Math.Pow(x, 4)
+            //    + 0.7220866 * Math.Pow(x, 5);
+
+            var y = 1.625 - 1.16666667 * x + 0.2083333 * x * x;
 
             return Normalize(y);
         }
