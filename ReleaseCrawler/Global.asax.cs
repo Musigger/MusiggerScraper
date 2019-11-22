@@ -14,7 +14,7 @@ namespace ReleaseCrawler
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
 
-            GlobalConfiguration.Configuration.Filters.Add(new AddCustomHeaderFilter());
+            //GlobalConfiguration.Configuration.Filters.Add(new AddCustomHeaderFilter());
             
             //Database.SetInitializer(new DropCreateDatabaseAlways<DataContext>());
         }

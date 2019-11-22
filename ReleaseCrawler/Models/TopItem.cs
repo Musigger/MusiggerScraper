@@ -5,12 +5,12 @@ namespace ReleaseCrowler.Models
 {
     public class TopItem
     {
-        public Release Release { get; set; }
+        public ReleaseItem Release { get; set; }
         public decimal Goodness { get; set; }
 
         public TopItem(Release release)
         {
-            Release = release;
+            Release = new ReleaseItem(release);
             Goodness = Ranger.GetReleaseGoodness(release);
         }
     }
