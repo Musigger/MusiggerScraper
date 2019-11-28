@@ -127,6 +127,7 @@
     <Compile Include="Controllers\ArtistsController.cs" />
     <Compile Include="Controllers\GenresController.cs" />
     <Compile Include="Controllers\LabelsController.cs" />
+    <Compile Include="Controllers\ProxyController.cs" />
     <Compile Include="Controllers\ReleasesController.cs" />
     <Compile Include="Controllers\TopTraxController.cs" />
     <Compile Include="CustomClasses\HttpInvoker.cs" />
