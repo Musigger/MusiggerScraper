@@ -31,7 +31,7 @@ namespace ReleaseCrowler.Controllers
 
                 HttpResponseMessage response = new HttpResponseMessage();
                 response.Content = new StreamContent(new FileStream(path, FileMode.Open)); // this file stream will be closed by lower layers of web api for you once the response is completed.
-                response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+                response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
 
                 return response;
             }
