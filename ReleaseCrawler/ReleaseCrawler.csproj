@@ -138,6 +138,7 @@
     <Compile Include="Models\Genre.cs" />
     <Compile Include="Models\Release.cs" />
     <Compile Include="Models\TopItem.cs" />
+    <Compile Include="Models\TopReleaseItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RocketScience\Ranger.cs" />
   </ItemGroup>
