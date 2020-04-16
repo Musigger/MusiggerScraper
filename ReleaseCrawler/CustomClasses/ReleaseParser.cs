@@ -169,7 +169,7 @@ namespace ReleaseCrawler.CustomClasses
                             }
                             Console.WriteLine("Crawler error: " + e.Message + " Inner exception: " + inner);
 
-                            throw;
+                            continue;
                         }
                     }
                     pageNumber++;
