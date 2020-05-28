@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -15,6 +16,11 @@ namespace ReleaseCrawler.CustomClasses
     {
         public static void Run()
         {
+            using (var writer = File.CreateText("C:\\Musigger\\Backend\\bin"))
+            {
+                writer.WriteLine("Db update started: " + DateTime.Now.ToString("dd.MM.yyyy HH:mm"));
+            }
+
             using (WebClient webClient = new WebClient())
             {
                 DataContext db = new DataContext();
@@ -193,6 +199,11 @@ namespace ReleaseCrawler.CustomClasses
                 db.Releases.RemoveRange(releasesToDelete);
 
                 db.SaveChanges();
+            }
+
+            using (var writer = File.CreateText("C:\\Musigger\\Backend\\bin"))
+            {
+                writer.WriteLine("Db updated at: " + DateTime.Now.ToString());
             }
         }
 
