@@ -108,7 +108,9 @@ namespace ReleaseCrawler.CustomClasses
                                 label = "";
                             }
                             var info = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("unreset")).First().InnerHtml;//инфо (треклист, прослушка, итц)
-                            
+
+                            info = info.Replace("http://embed.beatport.com", "https://embed.beatport.com");
+
                             var downloads = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("link-numm")).First().InnerHtml.Replace("Скачиваний: ",""); //загрузки, точнее их количесто
 
                             string Cover = "";
