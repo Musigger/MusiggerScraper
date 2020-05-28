@@ -94,7 +94,14 @@ namespace ReleaseCrawler.CustomClasses
                             }
                             artists = artists.Substring(0, artists.Length - 2);                                                                 //артисты
 
-                            var label = tablerel.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                          //лейбл
+                            var label = "";
+
+                            var labelMark = tablerel.SelectNodes("tr").Skip(1).First().Descendants("td").First().InnerText;
+
+                            if (labelMark == "Label:")
+                            {
+                                label = tablerel.SelectNodes("tr").Skip(1).First().Descendants("a").First().InnerText;                          //лейбл
+                            }
 
                             if ((ReleaseType)Enum.Parse(typeof(ReleaseType), type) == ReleaseType.Radioshow)
                             {
