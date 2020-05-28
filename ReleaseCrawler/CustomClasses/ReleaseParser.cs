@@ -183,6 +183,14 @@ namespace ReleaseCrawler.CustomClasses
                 }
                 Console.WriteLine("Saving");
                 db.SaveChanges();
+
+                Console.WriteLine("Removing doubles");
+
+                var releasesToDelete = db.Releases.AsEnumerable().GroupBy(m => m.ReleaseId).SelectMany(grp => grp.Skip(1)).ToList();
+
+                db.Releases.RemoveRange(releasesToDelete);
+
+                db.SaveChanges();
             }
         }
 
