@@ -177,21 +177,7 @@ namespace ReleaseCrawler.Controllers
             return Request.CreateResponse(HttpStatusCode.OK, new ReleaseDetails(release), MediaTypeHeaderValue.Parse("application/json"));
         }
 
-        public HttpResponseMessage Post(int id)
-        {
-            var release = db.Releases.Find(id);
 
-            if (release == null)
-                return Request.CreateResponse(HttpStatusCode.BadRequest, "release not found", MediaTypeHeaderValue.Parse("application/json"));
-
-            release.DownloadsFromMusigger = release.DownloadsFromMusigger + 1;
-
-            db.Entry(release).State = System.Data.Entity.EntityState.Modified;
-
-            db.SaveChanges();
-
-            return Request.CreateResponse(HttpStatusCode.OK, release.DownloadsFromMusigger, MediaTypeHeaderValue.Parse("application/json"));
-        }
 
         protected override void Dispose(bool disposing)
         {
