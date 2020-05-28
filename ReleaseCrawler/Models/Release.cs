@@ -23,6 +23,7 @@ namespace ReleaseCrawler
         public decimal Rating { get; set; }
         public DateTime? VoteRateUpdated { get; set; }
         public int? Downloads { get; set; }
+        public int DownloadsFromMusigger { get; set; }
     }
 
     public enum ReleaseType
