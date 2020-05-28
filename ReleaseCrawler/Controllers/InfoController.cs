@@ -13,7 +13,9 @@ namespace ReleaseCrowler.Controllers
     {
         public HttpResponseMessage Get()
         {
-            var info = File.ReadAllText("C:\\Musigger\\Backend\\bin");
+            var info = File.ReadAllText("C:\\Musigger\\Backend\\bin\\date.txt");
+
+            info = info.Replace("\r\n", "");
 
             return Request.CreateResponse(HttpStatusCode.OK, info, MediaTypeHeaderValue.Parse("application/json"));
         }

@@ -16,9 +16,9 @@ namespace ReleaseCrawler.CustomClasses
     {
         public static void Run()
         {
-            using (var writer = File.CreateText("C:\\Musigger\\Backend\\bin"))
+            using (var writer = File.CreateText("C:\\Musigger\\Backend\\bin\\date.txt"))
             {
-                writer.WriteLine("Db update started: " + DateTime.Now.ToString("dd.MM.yyyy HH:mm"));
+                writer.WriteLine("DB update started: " + DateTime.Now.ToString("dd.MM.yyyy HH:mm"));
             }
 
             using (WebClient webClient = new WebClient())
@@ -201,9 +201,9 @@ namespace ReleaseCrawler.CustomClasses
                 db.SaveChanges();
             }
 
-            using (var writer = File.CreateText("C:\\Musigger\\Backend\\bin"))
+            using (var writer = File.CreateText("C:\\Musigger\\Backend\\bin\\date.txt"))
             {
-                writer.WriteLine("Db updated at: " + DateTime.Now.ToString());
+                writer.WriteLine("DB updated at: " + DateTime.Now.ToString());
             }
         }
 
