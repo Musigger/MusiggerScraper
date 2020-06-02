@@ -16,14 +16,12 @@ namespace ReleaseCrawler.CustomClasses
     {
         public static void Run()
         {
-            using (var writer = File.CreateText("C:\\Musigger\\Backend\\bin\\date.txt"))
-            {
-                writer.WriteLine("DB update started: " + DateTime.Now.ToString("dd.MM.yyyy HH:mm"));
-            }
+            LogStatus("update started");
 
             using (WebClient webClient = new WebClient())
             {
                 DataContext db = new DataContext();
+
                 webClient.Encoding = Encoding.UTF8;
                 int pageNumber = 30;
                 int doubles = 0;
@@ -51,6 +49,11 @@ namespace ReleaseCrawler.CustomClasses
                             {
                                 Console.WriteLine("Saving");
                                 db.SaveChanges();
+
+                                RemoveDuplicates();
+
+                                LogStatus("updated");
+
                                 return;
                             }
 
@@ -117,7 +120,7 @@ namespace ReleaseCrawler.CustomClasses
 
                             info = info.Replace("http://embed.beatport.com", "https://embed.beatport.com");
 
-                            var downloads = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("link-numm")).First().InnerHtml.Replace("Скачиваний: ",""); //загрузки, точнее их количесто
+                            var downloads = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("link-numm")).First().InnerHtml.Replace("Скачиваний: ", ""); //загрузки, точнее их количесто
 
                             string Cover = "";
                             try
@@ -191,20 +194,42 @@ namespace ReleaseCrawler.CustomClasses
                 }
                 Console.WriteLine("Saving");
                 db.SaveChanges();
+                db.Dispose();
+                RemoveDuplicates();
 
-                Console.WriteLine("Removing doubles");
+                LogStatus("updated");
 
-                var releasesToDelete = db.Releases.AsEnumerable().GroupBy(m => m.ReleaseId).SelectMany(grp => grp.Skip(1)).ToList();
-
-                db.Releases.RemoveRange(releasesToDelete);
-
-                db.SaveChanges();
             }
 
-            using (var writer = File.CreateText("C:\\Musigger\\Backend\\bin\\date.txt"))
+
+
+        }
+
+        private static void RemoveDuplicates()
+        {
+            DataContext db = new DataContext();
+
+            Console.WriteLine("Removing doubles");
+
+            var releasesToDelete = db.Releases.AsEnumerable().GroupBy(m => m.ReleaseId).SelectMany(grp => grp.Skip(1)).ToList();
+
+            db.Releases.RemoveRange(releasesToDelete);
+
+            db.SaveChanges();
+            db.Dispose();
+
+        }
+
+        private static void LogStatus(string status)
+        {
+            try
             {
-                writer.WriteLine("DB updated at: " + DateTime.Now.ToString());
+                using (var writer = File.CreateText("C:\\Musigger\\Backend\\bin\\date.txt"))
+                {
+                    writer.WriteLine("DB " + status + " at: " + DateTime.Now.ToString("dd.MM.yyyy HH:mm"));
+                }
             }
+            catch { }
         }
 
         public static void GetGenres()
