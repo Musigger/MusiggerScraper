@@ -15,8 +15,6 @@ namespace ReleaseCrawler.Controllers
         {
             var artists = db.Releases.Select(m => m.Artists.Trim()).Distinct();
             
-            Request.Properties["Count"] = artists.Count();
-
             return Request.CreateResponse(HttpStatusCode.OK, artists.ToList(), MediaTypeHeaderValue.Parse("application/json"));
         }
     }

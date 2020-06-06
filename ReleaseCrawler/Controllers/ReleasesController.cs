@@ -4,6 +4,7 @@ using ReleaseCrawler.CustomClasses;
 using ReleaseCrawler.Models;
 using System;
 using System.Collections.Specialized;
+using System.Data.Entity;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -19,7 +20,7 @@ namespace ReleaseCrawler.Controllers
     {
         private DataContext db = new DataContext();
 
-        public HttpResponseMessage Get(int p = 1, int votes = 0, int perPage = 24, string labels = "", string genres ="", string types="", string artists = "", string title = "")
+        public async System.Threading.Tasks.Task<HttpResponseMessage> GetAsync(int p = 1, int votes = 0, int perPage = 24, string labels = "", string genres = "", string types = "", string artists = "", string title = "")
         {
             var releases = db.Releases.AsQueryable();
 
@@ -27,7 +28,7 @@ namespace ReleaseCrawler.Controllers
             {
                 releases = releases.Where(m => m.Votes >= votes);
             }
-            
+
             try
             {
                 if (artists != null && artists != "")
@@ -94,10 +95,7 @@ namespace ReleaseCrawler.Controllers
             }
             catch { }
 
-            Request.Properties["Count"] = releases.Count();
-
-            var count = Request.Properties["Count"];
-            HttpContext.Current.Response.AppendHeader("X-Total", count.ToString());
+            var releasesAmountTask = await releases.CountAsync();
 
 
             if (perPage == 0 || perPage >= 100)
@@ -106,17 +104,18 @@ namespace ReleaseCrawler.Controllers
             }
 
             int startIndex = perPage * (p - 1);
-            var page = releases.OrderByDescending(m=>m.ReleaseId).Skip(startIndex).Take(perPage).AsEnumerable();
+
+            var page = releases.OrderByDescending(m => m.Id).Skip(startIndex).Take(perPage).AsEnumerable();
 
             var result = page.Select(s => new ReleaseItem(s)).ToList();
+
+            HttpContext.Current.Response.AppendHeader("X-Total", releasesAmountTask.ToString());
 
             return Request.CreateResponse(HttpStatusCode.OK, result, MediaTypeHeaderValue.Parse("application/json"));
         }
 
         public HttpResponseMessage Get(int id)
         {
-            Request.Properties["Count"] = "1";
-
             return Request.CreateResponse(HttpStatusCode.OK, new ReleaseDetails(db.Releases.Find(id)), MediaTypeHeaderValue.Parse("application/json"));
         }
         
@@ -124,10 +123,7 @@ namespace ReleaseCrawler.Controllers
         {
             var release = db.Releases.Find(id);
             var expDate = DateTime.Now.AddDays(-1);
-            Request.Properties["Count"] = "1";
-
-            var count = Request.Properties["Count"];
-            HttpContext.Current.Response.AppendHeader("X-Total", count.ToString());
+            HttpContext.Current.Response.AppendHeader("X-Total", "1");
 
             if (release.VoteRateUpdated > expDate)
             {

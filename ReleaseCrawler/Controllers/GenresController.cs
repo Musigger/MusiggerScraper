@@ -14,7 +14,6 @@ namespace ReleaseCrawler.Controllers
         public HttpResponseMessage Get()
         {
             var genres = db.Genres.Select(m => m.Name);
-            Request.Properties["Count"] = genres.Count();
 
             return Request.CreateResponse(HttpStatusCode.OK, genres.ToList(), MediaTypeHeaderValue.Parse("application/json"));
         }
