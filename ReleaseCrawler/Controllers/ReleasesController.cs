@@ -144,6 +144,19 @@ namespace ReleaseCrawler.Controllers
             var vote = releaseDoc.DocumentNode.SelectNodes(string.Format("//*[contains(@id,'{0}')]", voteId)).First().InnerHtml; //голоса
             var info = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("unreset")).First().InnerHtml;//инфо (треклист, прослушка, итц)
 
+            string cover = "";
+            string miniCover = "";
+            try
+            {
+                var node = releasePage.SelectNodes(string.Format("//*[contains(@class,'{0}')]", "fancybox")).First();
+                cover = node.Attributes["href"].Value;//обложка
+                var miniCoverNode = node.ChildNodes.First();
+                miniCover = miniCoverNode.Attributes["src"].Value;
+
+            }
+
+            catch { }
+
             var downloads = releasePage.Descendants("div").Where(m => m.Attributes["class"].Value.Contains("link-numm")).First().InnerHtml.Replace("Скачиваний: ", ""); //загрузки, точнее их количесто
 
             //пост запросом получаем хитро спрятанный ссылки на скачивание
@@ -165,8 +178,10 @@ namespace ReleaseCrawler.Controllers
             release.Info = info;
             release.Links = links;
             release.Downloads = int.Parse(downloads);
+            release.Cover = cover;
+            release.MiniCover = miniCover;
 
-            db.Entry(release).State = System.Data.Entity.EntityState.Modified;
+            db.Entry(release).State = EntityState.Modified;
             db.SaveChanges();
 
 
