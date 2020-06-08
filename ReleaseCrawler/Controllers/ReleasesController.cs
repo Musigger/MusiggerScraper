@@ -105,7 +105,7 @@ namespace ReleaseCrawler.Controllers
 
             int startIndex = perPage * (p - 1);
 
-            var page = releases.OrderByDescending(m => m.Id).Skip(startIndex).Take(perPage).AsEnumerable();
+            var page = releases.OrderByDescending(m => m.ReleaseId).Skip(startIndex).Take(perPage).AsEnumerable();
 
             var result = page.Select(s => new ReleaseItem(s)).ToList();
 

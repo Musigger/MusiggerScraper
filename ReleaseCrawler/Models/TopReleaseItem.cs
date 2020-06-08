@@ -20,5 +20,9 @@ namespace ReleaseCrowler.Models
             Label = release.Label;
             Cover = release.Cover;
         }
+        public TopReleaseItem()
+        {
+
+        }
     }
 }
