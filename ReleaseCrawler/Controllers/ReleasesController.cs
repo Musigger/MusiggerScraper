@@ -1,15 +1,18 @@
 ﻿using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using ReleaseCrawler.CustomClasses;
 using ReleaseCrawler.Models;
 using System;
+using System.CodeDom;
+using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Data.Entity;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Web;
 using System.Web.Http;
@@ -31,14 +34,24 @@ namespace ReleaseCrawler.Controllers
 
             try
             {
+                if (title != null && title != "")
+                {
+                    title = title.Trim();
+
+                    releases = releases
+                        .Where(m => EF.Functions.FreeText(m.Name, title));
+                }
+            }
+            catch { }
+
+            try
+            {
                 if (artists != null && artists != "")
                 {
-                    string[] artistsList = artists.Split(',');
+                    artists = artists.Trim();
 
-                    if (artistsList.Count() > 0)
-                    {
-                        releases = releases.Where(m => artistsList.Any(n => m.Artists.Contains(n)));
-                    }
+                    releases = releases
+                     .Where(m => EF.Functions.FreeText(m.Artists, artists));
                 }
             }
             catch { }
@@ -50,9 +63,8 @@ namespace ReleaseCrawler.Controllers
                     string[] labelsList = labels.Split(',');
 
                     if (labelsList.Count() > 0)
-                    {
-                        releases = releases.Where(m => labelsList.Any(n => m.Label == n));
-                    }
+                        releases = releases.Where(m => labelsList.Contains(m.Label));
+
                 }
             }
             catch { }
@@ -65,7 +77,12 @@ namespace ReleaseCrawler.Controllers
 
                     if (genreList.Count() > 0)
                     {
-                        releases = releases.Where(m => genreList.Any(n => m.Genres.Contains(n)));
+                        var sourceReleases = releases;
+                        releases = Enumerable.Empty<Release>().AsQueryable();
+
+                        foreach (var genre in genreList)
+                            releases = releases.Union(sourceReleases.Where(m => EF.Functions.FreeText(m.Genres, genre)));
+
                     }
                 }
             }
@@ -77,31 +94,23 @@ namespace ReleaseCrawler.Controllers
                 {
                     string[] typeList = types.Split(',');
 
-                    if (typeList.Count() > 0)
-                    {
-                        releases = releases.Where(m => typeList.Contains(m.Type.ToString()));
-                    }
+                    var parsedTypes = new List<ReleaseType>();
+
+                    foreach (var type in typeList)
+                        parsedTypes.Add((ReleaseType)Enum.Parse(typeof(ReleaseType), type, true));
+
+                    if (parsedTypes.Count() > 0)
+                        releases = releases.Where(m => parsedTypes.Contains(m.Type));
+
                 }
             }
             catch { }
 
-            try
-            {
-                if (title != null && title != "")
-                {
-                    title = title.Trim();
-                    releases = releases.Where(m => m.Name.Contains(title));
-                }
-            }
-            catch { }
-
-            var releasesAmountTask = await releases.CountAsync();
 
 
             if (perPage == 0 || perPage >= 100)
-            {
                 perPage = 24;
-            }
+
 
             int startIndex = perPage * (p - 1);
 
@@ -109,7 +118,7 @@ namespace ReleaseCrawler.Controllers
 
             var result = page.Select(s => new ReleaseDetails(s)).ToList();
 
-            HttpContext.Current.Response.AppendHeader("X-Total", releasesAmountTask.ToString());
+            HttpContext.Current.Response.AppendHeader("X-Total", releases.Count().ToString());
 
             return Request.CreateResponse(HttpStatusCode.OK, result, MediaTypeHeaderValue.Parse("application/json"));
         }
@@ -118,8 +127,8 @@ namespace ReleaseCrawler.Controllers
         {
             return Request.CreateResponse(HttpStatusCode.OK, new ReleaseDetails(db.Releases.Find(id)), MediaTypeHeaderValue.Parse("application/json"));
         }
-        
-        public HttpResponseMessage Get (int id, bool update)
+
+        public HttpResponseMessage Get(int id, bool update)
         {
             var release = db.Releases.Find(id);
             var expDate = DateTime.Now.AddDays(-1);

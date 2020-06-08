@@ -11,13 +11,14 @@ namespace ReleaseCrowler.Controllers
 {
     public class ProxyController : ApiController
     {
-        public HttpResponseMessage Get(string url)
+        [System.Web.Http.Route("api/proxy/{*id}")]
+        public HttpResponseMessage Get(string id)
         {
             using (var client = new WebClient())
             {
-                var fullUrl = "http://freake.ru" + url;
+                var fullUrl = "http://freake.ru/" + id;
 
-                var path = HttpContext.Current.Server.MapPath("~/images") + url.Replace('/', '\\');
+                var path = HttpContext.Current.Server.MapPath("~/images/") + id.Replace('/', '\\');
 
                 if (!File.Exists(path))
                 {
@@ -32,6 +33,15 @@ namespace ReleaseCrowler.Controllers
                 HttpResponseMessage response = new HttpResponseMessage();
                 response.Content = new StreamContent(new FileStream(path, FileMode.Open)); // this file stream will be closed by lower layers of web api for you once the response is completed.
                 response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+
+                response.Headers.ETag = new EntityTagHeaderValue(@"""" + id + @"""");
+
+                var cacheControl = new CacheControlHeaderValue();
+                cacheControl.Public = true;
+                cacheControl.MaxAge = new System.TimeSpan(365,0,0,0,0);
+
+                response.Headers.CacheControl = cacheControl;
+
 
                 return response;
             }

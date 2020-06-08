@@ -1,4 +1,5 @@
-﻿using ReleaseCrawler.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using ReleaseCrawler.Models;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -19,7 +20,7 @@ namespace ReleaseCrowler.Controllers
 
             release.DownloadsFromMusigger = release.DownloadsFromMusigger + 1;
 
-            db.Entry(release).State = System.Data.Entity.EntityState.Modified;
+            db.Entry(release).State = EntityState.Modified;
 
             db.SaveChanges();
 
