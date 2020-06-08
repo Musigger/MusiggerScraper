@@ -51,7 +51,7 @@ namespace ReleaseCrawler.Controllers
 
                     if (labelsList.Count() > 0)
                     {
-                        releases = releases.Where(m => labelsList.Any(n => m.Label.Contains(n)));
+                        releases = releases.Where(m => labelsList.Any(n => m.Label == n));
                     }
                 }
             }
@@ -107,7 +107,7 @@ namespace ReleaseCrawler.Controllers
 
             var page = releases.OrderByDescending(m => m.ReleaseId).Skip(startIndex).Take(perPage).AsEnumerable();
 
-            var result = page.Select(s => new ReleaseItem(s)).ToList();
+            var result = page.Select(s => new ReleaseDetails(s)).ToList();
 
             HttpContext.Current.Response.AppendHeader("X-Total", releasesAmountTask.ToString());
 

@@ -65,6 +65,7 @@ namespace ReleaseCrawler
 
     public class ReleaseDetails
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public int Votes { get; set; }
         public string Type { get; set; }
@@ -72,6 +73,7 @@ namespace ReleaseCrawler
         public string Genres { get; set; }
 
         public string Cover { get; set; }
+        public string MiniCover { get; set; }
         public decimal Rating { get; set; }
         public string Info { get; set; }
         public int ReleaseId { get; set; }
@@ -85,6 +87,7 @@ namespace ReleaseCrawler
         }
         public ReleaseDetails(Release release)
         {
+            Id = release.Id;
             Name = release.Name;
             Votes = release.Votes;
             Type = release.Type.ToString();
@@ -92,6 +95,7 @@ namespace ReleaseCrawler
             Genres = release.Genres;
 
             Cover = release.Cover;
+            MiniCover = release.MiniCover;
             Rating = release.Rating;
             Info = release.Info;
             ReleaseId = release.ReleaseId;

@@ -54,7 +54,7 @@ namespace ReleaseCrowler.Controllers
             }
 
             var result = top.ToList()
-                .Select(s => new TopReleaseItem(s.Release));
+                .Select(s => new ReleaseDetails(s.Release));
 
             return Request.CreateResponse(HttpStatusCode.OK, result, MediaTypeHeaderValue.Parse("application/json"));
         }
