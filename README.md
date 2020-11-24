@@ -27,6 +27,15 @@ After that you can run the **CrawlerTask** to fill your database with new releas
 * **[Anton Zolotov](https://github.com/joseph2)** - *Client single page application*
 * **[Egor Shoba](https://github.com/silentfobos)** - *Server Web API*
 
+## Project suspended
+
+We haven't free time and money to host Musigger for now. So you can do it yourself, database dump now included in repo. Thank everyone used Musigger.
+
+Although donations can make a change. 
+* **BTC** 1PgSXDDGCeDoMJiaRWE2tJE1a6iVo8MXym
+* **ETH** 0x616F0F303BF877C8DbF8f38B65f988D74eB380e9
+* **Yandex.Money** https://yoomoney.ru/to/410015331091964
+
 ## License
 
 This project is licensed under the Mozilla Public License 2.0 - see the LICENSE.md file for details
